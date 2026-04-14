@@ -155,13 +155,13 @@ mkdir -p ~/.themes ~/.icons ~/.local/share/fonts
 print_step "Downloading WhiteSur GTK Theme..."
 TMPDIR=$(mktemp -d)
 git clone --depth=1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$TMPDIR/gtk-theme" 2>/dev/null
-print_step "Installing WhiteSur Dark (Monterey style + Shell theme)..."
-"$TMPDIR/gtk-theme/install.sh" -c dark -m -l --shell -i apple -p 45 2>&1 | tail -5
+print_step "Installing WhiteSur Dark + Light (Monterey style + Shell theme)..."
+"$TMPDIR/gtk-theme/install.sh" -c Dark -c Light -m -l --shell -i apple -p 45 2>&1 | tail -5
 
 # WhiteSur Icon Theme
 print_step "Downloading WhiteSur Icon Theme..."
 git clone --depth=1 https://github.com/vinceliuice/WhiteSur-icon-theme.git "$TMPDIR/icon-theme" 2>/dev/null
-print_step "Installing WhiteSur Icons (bold + alternative)..."
+print_step "Installing WhiteSur Icons (dark + light, bold + alternative)..."
 "$TMPDIR/icon-theme/install.sh" -a -b 2>&1 | tail -3
 
 # WhiteSur GDM / Shell Theme
@@ -608,7 +608,7 @@ cat > ~/.config/terminator/config << 'TERMINATOR_EOF'
   [[default]]
     cursor_shape = ibeam
     cursor_color = "#c0caf5"
-    font = JetBrainsMono Nerd Font 12
+    font = JetBrainsMono Nerd Font 13
     use_system_font = False
     foreground_color = "#c0caf5"
     background_color = "#1a1b26"
@@ -641,7 +641,7 @@ gsettings set org.gnome.desktop.interface gtk-theme 'WhiteSur-Dark'
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 
 # Icon Theme
-print_step "Applying WhiteSur icons..."
+print_step "Applying WhiteSur icons (dark)..."
 gsettings set org.gnome.desktop.interface icon-theme 'WhiteSur-dark'
 
 # Cursor Theme
@@ -651,10 +651,10 @@ gsettings set org.gnome.desktop.interface cursor-size 24
 
 # Fonts
 print_step "Applying SF Pro Display + JetBrains Mono..."
-gsettings set org.gnome.desktop.interface font-name 'SF Pro Display 11'
-gsettings set org.gnome.desktop.interface document-font-name 'SF Pro Display 11'
-gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font 11'
-gsettings set org.gnome.desktop.wm.preferences titlebar-font 'SF Pro Display Bold 11'
+gsettings set org.gnome.desktop.interface font-name 'SF Pro Display 13'
+gsettings set org.gnome.desktop.interface document-font-name 'SF Pro Display 13'
+gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font 12'
+gsettings set org.gnome.desktop.wm.preferences titlebar-font 'SF Pro Display Bold 13'
 
 # Font rendering
 gsettings set org.gnome.desktop.interface font-antialiasing 'rgba'
@@ -668,11 +668,19 @@ mkdir -p ~/.config/gtk-3.0 ~/.config/gtk-4.0
 
 cat > ~/.config/gtk-3.0/settings.ini << 'GTK3_EOF'
 [Settings]
+gtk-application-prefer-dark-theme=1
+gtk-theme-name=WhiteSur-Dark
+gtk-icon-theme-name=WhiteSur-dark
+gtk-cursor-theme-name=macOS
 gtk-decoration-layout=close,minimize,maximize:
 GTK3_EOF
 
 cat > ~/.config/gtk-4.0/settings.ini << 'GTK4_EOF'
 [Settings]
+gtk-application-prefer-dark-theme=1
+gtk-theme-name=WhiteSur-Dark
+gtk-icon-theme-name=WhiteSur-dark
+gtk-cursor-theme-name=macOS
 gtk-decoration-layout=close,minimize,maximize:
 GTK4_EOF
 
@@ -761,11 +769,17 @@ else
 fi
 
 if [ -f "$WALLPAPER" ]; then
-    gsettings set org.gnome.desktop.background picture-uri "file://$WALLPAPER"
+    LIGHT_WALLPAPER="$HOME/Pictures/tux-developer-wallpaper-light.png"
+    # picture-uri = light mode wallpaper, picture-uri-dark = dark mode wallpaper
+    if [ -f "$LIGHT_WALLPAPER" ]; then
+        gsettings set org.gnome.desktop.background picture-uri "file://$LIGHT_WALLPAPER"
+    else
+        gsettings set org.gnome.desktop.background picture-uri "file://$WALLPAPER"
+    fi
     gsettings set org.gnome.desktop.background picture-uri-dark "file://$WALLPAPER"
     gsettings set org.gnome.desktop.background picture-options 'zoom'
     gsettings set org.gnome.desktop.screensaver picture-uri "file://$WALLPAPER"
-    print_done "Wallpaper applied"
+    print_done "Wallpaper applied (light + dark)"
 fi
 
 # ============================================
@@ -913,10 +927,41 @@ mkdir -p ~/.local/bin
 print_step "Creating theme-dark script..."
 cat > ~/.local/bin/theme-dark << 'DARK_EOF'
 #!/bin/bash
+# ============================================
+# 🌙 Switch to Dark Mode (Tokyo Night)
+# ============================================
+
+# --- GNOME Desktop: GTK + Shell + Icons + Cursor ---
 gsettings set org.gnome.desktop.interface gtk-theme 'WhiteSur-Dark'
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 gsettings set org.gnome.desktop.interface icon-theme 'WhiteSur-dark'
+gsettings set org.gnome.desktop.interface cursor-theme 'macOS'
 gsettings set org.gnome.shell.extensions.user-theme name 'WhiteSur-Dark'
+
+# --- GTK3 / GTK4 settings.ini (for apps that read these directly) ---
+mkdir -p ~/.config/gtk-3.0 ~/.config/gtk-4.0
+
+cat > ~/.config/gtk-3.0/settings.ini << 'G3EOF'
+[Settings]
+gtk-application-prefer-dark-theme=1
+gtk-theme-name=WhiteSur-Dark
+gtk-icon-theme-name=WhiteSur-dark
+gtk-cursor-theme-name=macOS
+gtk-decoration-layout=close,minimize,maximize:
+G3EOF
+
+cat > ~/.config/gtk-4.0/settings.ini << 'G4EOF'
+[Settings]
+gtk-application-prefer-dark-theme=1
+gtk-theme-name=WhiteSur-Dark
+gtk-icon-theme-name=WhiteSur-dark
+gtk-cursor-theme-name=macOS
+gtk-decoration-layout=close,minimize,maximize:
+G4EOF
+
+
+
+# --- Terminator (Tokyo Night Dark) ---
 mkdir -p ~/.config/terminator
 cat > ~/.config/terminator/config << 'EOF'
 [global_config]
@@ -930,7 +975,7 @@ cat > ~/.config/terminator/config << 'EOF'
   [[default]]
     cursor_shape = ibeam
     cursor_color = "#c0caf5"
-    font = JetBrainsMono Nerd Font 12
+    font = JetBrainsMono Nerd Font 13
     use_system_font = False
     foreground_color = "#c0caf5"
     background_color = "#1a1b26"
@@ -949,21 +994,34 @@ cat > ~/.config/terminator/config << 'EOF'
       parent = window0
 [plugins]
 EOF
+
+# --- VS Code → Tokyo Night ---
 VSCODE_SETTINGS="$HOME/.config/Code/User/settings.json"
 if [ -f "$VSCODE_SETTINGS" ]; then
     python3 -c "
-import json
-with open('$VSCODE_SETTINGS') as f: cfg = json.load(f)
+import json, os
+path = os.path.expanduser('$VSCODE_SETTINGS')
+try:
+    with open(path) as f: cfg = json.load(f)
+except: cfg = {}
 cfg['workbench.colorTheme'] = 'Tokyo Night'
-with open('$VSCODE_SETTINGS', 'w') as f: json.dump(cfg, f, indent=4)
+cfg['window.autoDetectColorScheme'] = True
+cfg['workbench.preferredDarkColorTheme'] = 'Tokyo Night'
+cfg['workbench.preferredLightColorTheme'] = 'Tokyo Night Light'
+with open(path, 'w') as f: json.dump(cfg, f, indent=4)
 " 2>/dev/null
 fi
-[ -f "$HOME/Pictures/tux-developer-wallpaper.png" ] && {
-    gsettings set org.gnome.desktop.background picture-uri "file://$HOME/Pictures/tux-developer-wallpaper-light.png"
-    gsettings set org.gnome.desktop.background picture-uri-dark "file://$HOME/Pictures/tux-developer-wallpaper.png"
-    gsettings set org.gnome.desktop.background picture-options 'zoom'
-}
+
+# --- Wallpaper: set light=light, dark=dark, GNOME picks by color-scheme ---
+DARK_WP="$HOME/Pictures/tux-developer-wallpaper.png"
+LIGHT_WP="$HOME/Pictures/tux-developer-wallpaper-light.png"
+[ -f "$LIGHT_WP" ] && gsettings set org.gnome.desktop.background picture-uri "file://$LIGHT_WP"
+[ -f "$DARK_WP" ] && gsettings set org.gnome.desktop.background picture-uri-dark "file://$DARK_WP"
+gsettings set org.gnome.desktop.background picture-options 'zoom'
+
+# --- Save current mode ---
 echo "dark" > ~/.config/.theme-mode
+
 echo "🌙 Dark Mode activated — restart Terminator for terminal changes"
 DARK_EOF
 
@@ -971,10 +1029,41 @@ DARK_EOF
 print_step "Creating theme-light script..."
 cat > ~/.local/bin/theme-light << 'LIGHT_EOF'
 #!/bin/bash
+# ============================================
+# ☀️ Switch to Light Mode (Tokyo Night Day)
+# ============================================
+
+# --- GNOME Desktop: GTK + Shell + Icons + Cursor ---
 gsettings set org.gnome.desktop.interface gtk-theme 'WhiteSur-Light'
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
 gsettings set org.gnome.desktop.interface icon-theme 'WhiteSur'
+gsettings set org.gnome.desktop.interface cursor-theme 'macOS-White'
 gsettings set org.gnome.shell.extensions.user-theme name 'WhiteSur-Light'
+
+# --- GTK3 / GTK4 settings.ini (for apps that read these directly) ---
+mkdir -p ~/.config/gtk-3.0 ~/.config/gtk-4.0
+
+cat > ~/.config/gtk-3.0/settings.ini << 'G3EOF'
+[Settings]
+gtk-application-prefer-dark-theme=0
+gtk-theme-name=WhiteSur-Light
+gtk-icon-theme-name=WhiteSur
+gtk-cursor-theme-name=macOS-White
+gtk-decoration-layout=close,minimize,maximize:
+G3EOF
+
+cat > ~/.config/gtk-4.0/settings.ini << 'G4EOF'
+[Settings]
+gtk-application-prefer-dark-theme=0
+gtk-theme-name=WhiteSur-Light
+gtk-icon-theme-name=WhiteSur
+gtk-cursor-theme-name=macOS-White
+gtk-decoration-layout=close,minimize,maximize:
+G4EOF
+
+
+
+# --- Terminator (Tokyo Night Day/Light) ---
 mkdir -p ~/.config/terminator
 cat > ~/.config/terminator/config << 'EOF'
 [global_config]
@@ -988,7 +1077,7 @@ cat > ~/.config/terminator/config << 'EOF'
   [[default]]
     cursor_shape = ibeam
     cursor_color = "#3760bf"
-    font = JetBrainsMono Nerd Font 12
+    font = JetBrainsMono Nerd Font 13
     use_system_font = False
     foreground_color = "#3760bf"
     background_color = "#e1e2e7"
@@ -1007,21 +1096,34 @@ cat > ~/.config/terminator/config << 'EOF'
       parent = window0
 [plugins]
 EOF
+
+# --- VS Code → Tokyo Night Light ---
 VSCODE_SETTINGS="$HOME/.config/Code/User/settings.json"
 if [ -f "$VSCODE_SETTINGS" ]; then
     python3 -c "
-import json
-with open('$VSCODE_SETTINGS') as f: cfg = json.load(f)
+import json, os
+path = os.path.expanduser('$VSCODE_SETTINGS')
+try:
+    with open(path) as f: cfg = json.load(f)
+except: cfg = {}
 cfg['workbench.colorTheme'] = 'Tokyo Night Light'
-with open('$VSCODE_SETTINGS', 'w') as f: json.dump(cfg, f, indent=4)
+cfg['window.autoDetectColorScheme'] = True
+cfg['workbench.preferredDarkColorTheme'] = 'Tokyo Night'
+cfg['workbench.preferredLightColorTheme'] = 'Tokyo Night Light'
+with open(path, 'w') as f: json.dump(cfg, f, indent=4)
 " 2>/dev/null
 fi
-[ -f "$HOME/Pictures/tux-developer-wallpaper.png" ] && {
-    gsettings set org.gnome.desktop.background picture-uri "file://$HOME/Pictures/tux-developer-wallpaper-light.png"
-    gsettings set org.gnome.desktop.background picture-uri-dark "file://$HOME/Pictures/tux-developer-wallpaper.png"
-    gsettings set org.gnome.desktop.background picture-options 'zoom'
-}
+
+# --- Wallpaper: set light=light, dark=dark, GNOME picks by color-scheme ---
+DARK_WP="$HOME/Pictures/tux-developer-wallpaper.png"
+LIGHT_WP="$HOME/Pictures/tux-developer-wallpaper-light.png"
+[ -f "$LIGHT_WP" ] && gsettings set org.gnome.desktop.background picture-uri "file://$LIGHT_WP"
+[ -f "$DARK_WP" ] && gsettings set org.gnome.desktop.background picture-uri-dark "file://$DARK_WP"
+gsettings set org.gnome.desktop.background picture-options 'zoom'
+
+# --- Save current mode ---
 echo "light" > ~/.config/.theme-mode
+
 echo "☀️ Light Mode activated — restart Terminator for terminal changes"
 LIGHT_EOF
 
@@ -1042,6 +1144,54 @@ echo "dark" > ~/.config/.theme-mode
 
 print_done "Theme toggle: 'dark', 'light', 'toggle' commands available"
 
+# theme-monitor: watches GNOME Quick Settings "Dark Style" toggle
+print_step "Creating theme-monitor (background watcher for Dark Style toggle)..."
+cat > ~/.local/bin/theme-monitor << 'MONITOR_EOF'
+#!/bin/bash
+# ============================================
+# 👁️ Monitor GNOME Dark Style toggle
+# Watches color-scheme changes and triggers
+# full theme switch (GTK, icons, shell, etc.)
+# ============================================
+
+LAST_MODE=$(cat ~/.config/.theme-mode 2>/dev/null || echo "dark")
+
+gsettings monitor org.gnome.desktop.interface color-scheme | while read -r line; do
+    SCHEME=$(gsettings get org.gnome.desktop.interface color-scheme)
+
+    if [[ "$SCHEME" == *"prefer-dark"* ]] && [ "$LAST_MODE" != "dark" ]; then
+        LAST_MODE="dark"
+        theme-dark
+    elif [[ "$SCHEME" == *"prefer-light"* || "$SCHEME" == *"default"* ]] && [ "$LAST_MODE" != "light" ]; then
+        LAST_MODE="light"
+        theme-light
+    fi
+done
+MONITOR_EOF
+chmod +x ~/.local/bin/theme-monitor
+
+# Systemd user service for theme-monitor
+print_step "Installing theme-monitor systemd user service..."
+mkdir -p ~/.config/systemd/user
+cat > ~/.config/systemd/user/theme-monitor.service << 'SERVICE_EOF'
+[Unit]
+Description=GNOME Dark Style Monitor - Full theme toggle
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/theme-monitor
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target
+SERVICE_EOF
+
+systemctl --user daemon-reload
+systemctl --user enable --now theme-monitor.service 2>/dev/null
+print_done "theme-monitor service enabled (auto-starts on login)"
+
 # ============================================
 # DONE!
 # ============================================
@@ -1050,7 +1200,7 @@ print_header "Setup Complete! 🎉"
 echo ""
 echo -e "${GREEN}${BOLD}  Everything has been installed and configured:${NC}"
 echo ""
-echo -e "  ${CYAN}Theme:${NC}       WhiteSur-Dark (Monterey style)"
+echo -e "  ${CYAN}Theme:${NC}       WhiteSur Dark + Light (Monterey style)"
 echo -e "  ${CYAN}Icons:${NC}       WhiteSur-dark"
 echo -e "  ${CYAN}Cursor:${NC}      macOS"
 echo -e "  ${CYAN}Fonts:${NC}       SF Pro Display + JetBrains Mono Nerd Font"
