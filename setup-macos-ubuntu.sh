@@ -156,7 +156,7 @@ print_step "Downloading WhiteSur GTK Theme..."
 TMPDIR=$(mktemp -d)
 git clone --depth=1 https://github.com/vinceliuice/WhiteSur-gtk-theme.git "$TMPDIR/gtk-theme" 2>/dev/null
 print_step "Installing WhiteSur Dark + Light (Monterey style + Shell theme)..."
-"$TMPDIR/gtk-theme/install.sh" -c Dark -c Light -m -l --shell -i apple -p 45 2>&1 | tail -5
+"$TMPDIR/gtk-theme/install.sh" -c Dark -c Light -m -l --shell -i tux -p 45 2>&1 | tail -5
 
 # WhiteSur Icon Theme
 print_step "Downloading WhiteSur Icon Theme..."
